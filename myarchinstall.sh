@@ -57,28 +57,26 @@ arch-chroot /mnt /bin/bash -c "echo ::1 localhost >> /etc/hosts"
 arch-chroot /mnt /bin/bash -c "echo 127.0.1.1 $HOST.localdomain $HOST >> /etc/hosts"
 
 # Install bootloader (systemd-boot)
-arch-chroot /mnt /bin/bash -c "bootctl install --target=x86_64-EFI --EFIDIRECTORY=/boot --bootloader-"
+arch-chroot /mnt /bin/bash -c "bootctl install --path=/boot install"
 
 # Create boot entry
 echo "title Arch Linux" > /mnt/boot/loader/entries/arch.conf
-echo "linux /vimlinuz-linux" >> /mnt/boot/loader/entries/arch.conf
+echo "linux /vmlinuz-linux" >> /mnt/boot/loader/entries/arch.conf
 echo "initrd /initramfs-linux.img" >> /mnt/boot/loader/entries/arch.conf
-echo "options root=${DISK} rw" >> /mnt/boot/loader/entries/arch.conf
+echo "options root=${DISK}1 rw" >> /mnt/boot/loader/entries/arch.conf
 
 # edit loader configuration
-default arch
-timeout 4
-console-mode max
-editor no
-
-bootctl --path=/boot update
-
+echo "default arch-*" > /mnt/boot/loader/loader.conf
+echo "timeout 4" > /mnt/boot/loader/loader.conf
+echo "console-mode max" > /mnt/boot/loader/loader.conf
+echo "editor no" > /mnt/boot/loader/loader.conf
+l
 # Set root password
-echo "root:$ROOT_PASSWORD" | chroot /mnt chpasswd
+echo "root:$PASS" | chroot /mnt chpasswd
 
 # Create user
 arch-chroot /mnt /bin/bash -c "useradd -m -G wheel -s /bin/bash $USERNAME"
-echo "$USERNAME:$PASSWORD" | chroot /mnt chpasswd
+echo "$USERNAME:$PASS" | chroot /mnt chpasswd
 
 # Enable wheel group
 arch-chroot /mnt /bin/bash -c "sed -i 's/^#\s*\(%wheel\s\+ALL=(ALL)\s\+ALL\)/\1/' /etc/sudoers"
