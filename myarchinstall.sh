@@ -1,9 +1,21 @@
 #!/bin/bash
 
 # Set variables for install prcorss
-HOST="myarch"
-USER="myuser"
-DISK=""
+HOST="toaster"
+USER="aidan"
+
+# get disk
+while true; do
+    read -s -p "Enter a disk: " DISK1; echo
+    read -s -p "Confirm disk: " DISK2; echo
+    if [ "$PASS1" != "$PASS2" ]; then
+        echo "Disk names do not match. Please try again."
+    else
+        DISK=$DISK1
+		echo "Disk name confirmed"
+		break
+    fi
+done
 
 # get password
 while true; do
@@ -22,72 +34,90 @@ done
 SWAP=$(free -m | awk '/^Mem:/{print $2}')
 
 # Partition disk
+echo "Partitioning the disk..."
 parted --script $DISK \
 	mklabel gpt \
 	mkpart ESP fat32 1MiB 513MiB \
 	set 1 boot on \
 	mkpart primary linux-swap 513MiB $((513 + $SWAP))MiB \
 	mkpart primary ext4 $((513 +  $SWAP))MiB 100%
-	
+
 # Format partitions
+echo "Formatting the partitions..."
 mkfs.fat -F32 ${DISK}1
 mkswap ${DISK}2
 mkfs.ext4 ${DISK}3
 
-# Mount root
+# Mount the filesyste,
+echo "Mounting the file systems..."
 mount ${DISK}3 /mnt
-# Mount boot
 mount --mkdir ${DISK}1 /mnt/boot
-# Enable swap
 swapon ${DISK}2
 
-# Install base system
-pacstrap /mnt base base-devel
+
+# Install the base system
+echo "Installing the base system..."
+pacstrap /mnt base base-devel linux linux-firmware
 
 # Generate fstab
+echo "Generating fstab..."
 genfstab -U /mnt >> /mnt/etc/fstab
 
-# Set up system
-arch-chroot /mnt /bin/bash -c "ln -sf /usr/share/zoneinfo/US/Central /etc/localtime; hwclock --systohc"
-arch-chroot /mnt /bin/bash -c "echo en_US.UTF-8 UTF-8 > /etc/locale.gen; locale-gen"
-arch-chroot /mnt /bin/bash -c "echo LANG=en_US.UTF-8 > /etc/locale.conf"
-arch-chroot /mnt /bin/bash -c "echo $HOST > /etc/hostname"
-arch-chroot /mnt /bin/bash -c "echo 127.0.0.1 localhost > /etc/hosts"
-arch-chroot /mnt /bin/bash -c "echo ::1 localhost >> /etc/hosts"
-arch-chroot /mnt /bin/bash -c "echo 127.0.1.1 $HOST.localdomain $HOST >> /etc/hosts"
+# Chroot into the new system
+echo "Chrooting into the new system..."
+arch-chroot /mnt /bin/bash << EOF
 
-arch-chroot /mnt /bin/bash -c "pacman -S efibootmgr"
+# Set the time zone
+echo "Setting timezone..."
+ln -sf /usr/share/zoneinfo/US/Central /etc/localtime
+hwclock --systohc
 
-# Install bootloader (systemd-boot)
-arch-chroot /mnt /bin/bash -c "bootctl install --path=/boot install"
+# Set the hostname
+echo "Configuring Network..."
+echo $HOST > /etc/hostname
+echo '127.0.0.1 localhost' > /etc/hosts
+echo '::1 localhost' >> /etc/hosts
+echo '127.0.1.1 ${HOST}' >> /etc/hosts
 
-# Create boot entry
-echo "title Arch Linux" > /mnt/boot/loader/entries/arch.conf
-echo "linux /vmlinuz-linux" >> /mnt/boot/loader/entries/arch.conf
-echo "initrd /initramfs-linux.img" >> /mnt/boot/loader/entries/arch.conf
-echo "options root=${DISK}3 rw" >> /mnt/boot/loader/entries/arch.conf
+# Generate the locales
+echo "Generating locale..."
+echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
+locale-gen
+echo "LANG=en_US.UTF-8" > /etc/locale.conf
 
-# edit loader configuration
-echo "default arch" > /mnt/boot/loader/loader.conf
-echo "timeout 4" >> /mnt/boot/loader/loader.conf
-echo "console-mode max" >> /mnt/boot/loader/loader.conf
-echo "editor no" >> /mnt/boot/loader/loader.conf
+
+# Install and configure systemd-boot
+echo "Installing systemd-boot..."
+bootctl --path=/boot/efi install
+echo "default arch" > /boot/efi/loader/loader.conf
+echo "timeout 4" >> /boot/efi/loader/loader.conf
+echo "console-mode max" >> /boot/efi/loader/loader.conf
+echo "editor no" >> /boot/efi/loader/loader.conf
+echo "title Arch Linux" > /boot/efi/loader/entries/arch.conf
+echo "linux /vmlinuz-linux" >> /boot/efi/loader/entries/arch.conf
+echo "initrd /initramfs-linux.img" >> /boot/efi/loader/entries/arch.conf
+echo "options root=/dev/sda3 rw" >> /boot/efi/loader/entries/arch.conf
 
 # Set root password
-echo "root:$PASS" | chroot /mnt chpasswd
+echo "Setting the root password..."
+echo "root:$PASS" | chpasswd
 
 # Create user
-arch-chroot /mnt /bin/bash -c "useradd -m -G wheel -s /bin/bash $USERNAME"
-echo "$USERNAME:$PASS" | chroot /mnt chpasswd
+echo "Creating user..."
+arch-chroot /mnt /bin/bash -c "useradd -m -G wheel -s /bin/bash $USER"
+echo "$USER:$PASS" | chpasswd
 
 # Enable wheel group
 arch-chroot /mnt /bin/bash -c "sed -i 's/^#\s*\(%wheel\s\+ALL=(ALL)\s\+ALL\)/\1/' /etc/sudoers"
 
-# Install additional packages
-arch-chroot /mnt /bin/bash -c "pacman -S --noconfirm vim git openssh"
+# Exit the chroot environment
+exit
+EOF
 
-# Unmount partitions
+# Unmount the file systems
+echo "Unmounting the file systems..."
 umount -R /mnt
 
-echo "Installation complete. Rebooting system."
-# reboot
+# Reboot the system
+echo "Rebooting the system..."
+reboot
