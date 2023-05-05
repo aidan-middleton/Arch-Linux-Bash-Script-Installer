@@ -65,7 +65,7 @@ genfstab -U /mnt >> /mnt/etc/fstab
 
 # Chroot into the new system
 echo "Chrooting into the new system..."
-arch-chroot /mnt /bin/bash << EOF
+arch-chroot /mnt /bin/bash
 
 # Set the time zone
 echo "Setting timezone..."
@@ -112,7 +112,6 @@ arch-chroot /mnt /bin/bash -c "sed -i 's/^#\s*\(%wheel\s\+ALL=(ALL)\s\+ALL\)/\1/
 
 # Exit the chroot environment
 exit
-EOF
 
 # Unmount the file systems
 echo "Unmounting the file systems..."
