@@ -104,7 +104,7 @@ echo "root:$PASS" | chpasswd
 
 # Create user
 echo "Creating user..."
-arch-chroot /mnt /bin/bash -c "useradd -m -G wheel -s /bin/bash $USER"
+useradd -m -G wheel -s /bin/bash $USER
 echo "$USER:$PASS" | chpasswd
 
 # Enable wheel group
