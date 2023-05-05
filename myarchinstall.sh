@@ -56,6 +56,8 @@ arch-chroot /mnt /bin/bash -c "echo 127.0.0.1 localhost > /etc/hosts"
 arch-chroot /mnt /bin/bash -c "echo ::1 localhost >> /etc/hosts"
 arch-chroot /mnt /bin/bash -c "echo 127.0.1.1 $HOST.localdomain $HOST >> /etc/hosts"
 
+arch-chroot /mnt /bin/bash -c "pacman -S efibootmgr"
+
 # Install bootloader (systemd-boot)
 arch-chroot /mnt /bin/bash -c "bootctl install --path=/boot install"
 
@@ -63,14 +65,14 @@ arch-chroot /mnt /bin/bash -c "bootctl install --path=/boot install"
 echo "title Arch Linux" > /mnt/boot/loader/entries/arch.conf
 echo "linux /vmlinuz-linux" >> /mnt/boot/loader/entries/arch.conf
 echo "initrd /initramfs-linux.img" >> /mnt/boot/loader/entries/arch.conf
-echo "options root=${DISK}1 rw" >> /mnt/boot/loader/entries/arch.conf
+echo "options root=${DISK}3 rw" >> /mnt/boot/loader/entries/arch.conf
 
 # edit loader configuration
-echo "default arch-*" > /mnt/boot/loader/loader.conf
-echo "timeout 4" > /mnt/boot/loader/loader.conf
-echo "console-mode max" > /mnt/boot/loader/loader.conf
-echo "editor no" > /mnt/boot/loader/loader.conf
-l
+echo "default arch" > /mnt/boot/loader/loader.conf
+echo "timeout 4" >> /mnt/boot/loader/loader.conf
+echo "console-mode max" >> /mnt/boot/loader/loader.conf
+echo "editor no" >> /mnt/boot/loader/loader.conf
+
 # Set root password
 echo "root:$PASS" | chroot /mnt chpasswd
 
