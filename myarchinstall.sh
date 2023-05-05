@@ -2,27 +2,30 @@
 
 # Set variables for install prcorss
 HOST="myarch"
-
 USER="myuser"
-PASS="mypass"
-ROOTPASS="myrootpass"
-
 DISK=""
 
+# get password
+while true; do
+    read -s -p "Enter password: " PASS1; echo
+    read -s -p "Confirm password: " PASS2; echo
+    if [ "$PASS1" != "$PASS2" ]; then
+        echo "Passwords do not match. Please try again."
+    else
+        PASS=$PASS1
+		echo "Password confirmed"
+		break
+    fi
+done
+
+# Get the amount of needed swap space
 SWAP=$(free -m | awk '/^Mem:/{print $2}')
-
-# Calculate partitions
-BOOT_START="1"
-BOOT_END="513"
-SWAP_START=$(BOOT_END)
-SWAP_END=$(BOOT_END + $SWAP_SIZE)
-
-
 
 # Partition disk
 parted --script $DISK \
 	mklabel gpt \
 	mkpart ESP fat32 1MiB 513MiB \
+	set 1 boot on \
 	mkpart primary linux-swap 513MiB $((513 + $SWAP))MiB \
 	mkpart primary ext4 $((513 +  $SWAP))MiB 100%
 	
@@ -62,6 +65,13 @@ echo "linux /vimlinuz-linux" >> /mnt/boot/loader/entries/arch.conf
 echo "initrd /initramfs-linux.img" >> /mnt/boot/loader/entries/arch.conf
 echo "options root=${DISK} rw" >> /mnt/boot/loader/entries/arch.conf
 
+# edit loader configuration
+default arch
+timeout 4
+console-mode max
+editor no
+
+bootctl --path=/boot update
 
 # Set root password
 echo "root:$ROOT_PASSWORD" | chroot /mnt chpasswd
