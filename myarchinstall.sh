@@ -37,7 +37,7 @@ mkfs.ext4 ${DISK}3
 # Mount root
 mount ${DISK}3 /mnt
 # Mount boot
-mount --mkdir ${DISK}2 /mnt/boot
+mount --mkdir ${DISK}1 /mnt/boot
 # Enable swap
 swapon ${DISK}2
 
