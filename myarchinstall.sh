@@ -108,7 +108,7 @@ useradd -m -G wheel -s /bin/bash $USER
 echo "$USER:$PASS" | chpasswd
 
 # Enable wheel group
-arch-chroot /mnt /bin/bash -c "sed -i 's/^#\s*\(%wheel\s\+ALL=(ALL)\s\+ALL\)/\1/' /etc/sudoers"
+sed -i '/^# %wheel ALL=(ALL:ALL) ALL$/s/^# //' /etc/sudoers
 
 # Enable multilib
 sed -i '/^\[multilib\]/,/^$/ s/#//' /etc/pacman.conf
@@ -120,6 +120,8 @@ sed -i 's/vm.max_map_count = 65530/vm.max_map_count = 2147483642/' /etc/sysctl.d
 pacman -Syu --noconfirm sudo efibootmgr networmanager network-manager-applet wireless_tools wpa_supplicant dialog os-probel mtools dosfstools linux-headers base-devel git vim
 
 # enable network manager
+systemctl enable NetworManager
+
 
 # Install AUR healper paru
 git clone https://aur.archlinux.org/paru.git
@@ -134,6 +136,8 @@ paru -S --noconfirm amdgpu-pro-installer
 
 # Install desktop 
 pacman -S --noconfirm xorg awesome rofi lightdm lightdm-gtk-greeter xterm
+
+systemctl enable lightdm
 
 # Install additional applications
 pacman -S --noconfirm firefox discord steam lutris
