@@ -6,8 +6,8 @@ USER="aidan"
 
 # get disk
 while true; do
-    read -s -p "Enter a disk: " DISK1; echo
-    read -s -p "Confirm disk: " DISK2; echo
+    read -p "Enter a disk: " DISK1; echo
+    read -p "Confirm disk: " DISK2; echo
     if [ "$PASS1" != "$PASS2" ]; then
         echo "Disk names do not match. Please try again."
     else
@@ -88,7 +88,7 @@ echo "LANG=en_US.UTF-8" > /etc/locale.conf
 
 # Install and configure systemd-boot
 echo "Installing systemd-boot..."
-bootctl --path=/boot/efi install
+bootctl --path=/boot install
 echo "default arch" > /boot/efi/loader/loader.conf
 echo "timeout 4" >> /boot/efi/loader/loader.conf
 echo "console-mode max" >> /boot/efi/loader/loader.conf
