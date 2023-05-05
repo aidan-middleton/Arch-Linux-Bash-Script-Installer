@@ -110,6 +110,34 @@ echo "$USER:$PASS" | chpasswd
 # Enable wheel group
 arch-chroot /mnt /bin/bash -c "sed -i 's/^#\s*\(%wheel\s\+ALL=(ALL)\s\+ALL\)/\1/' /etc/sudoers"
 
+# Enable multilib
+sed -i '/^\[multilib\]/,/^$/ s/#//' /etc/pacman.conf
+
+# Change max map count
+sed -i 's/vm.max_map_count = 65530/vm.max_map_count = 2147483642/' /etc/sysctl.d/80-gamecompatibility.conf
+
+# Install  some basic packages
+pacman -Syu --noconfirm sudo efibootmgr networmanager network-manager-applet wireless_tools wpa_supplicant dialog os-probel mtools dosfstools linux-headers base-devel git vim
+
+# enable network manager
+
+# Install AUR healper paru
+git clone https://aur.archlinux.org/paru.git
+cd paru
+makepkg -si
+
+# Install fonts
+paru -S --noconfirm ttf-ms-win11-auto 
+
+# Install GPU drivers
+paru -S --noconfirm amdgpu-pro-installer
+
+# Install desktop 
+pacman -S --noconfirm xorg awesome rofi lightdm lightdm-gtk-greeter xterm
+
+# Install additional applications
+pacman -S --noconfirm firefox discord steam lutris
+
 # Exit the chroot environment
 exit
 EOF
