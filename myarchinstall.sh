@@ -6,8 +6,8 @@ USER="aidan"
 
 # get disk
 while true; do
-    read -p "Enter a disk: " DISK1; echo
-    read -p "Confirm disk: " DISK2; echo
+    read -p "Enter a disk: " DISK1
+    read -p "Confirm disk: " DISK2
     if [ "$PASS1" != "$PASS2" ]; then
         echo "Disk names do not match. Please try again."
     else
@@ -121,7 +121,6 @@ pacman -Syu --noconfirm sudo efibootmgr networmanager network-manager-applet wir
 
 # enable network manager
 systemctl enable NetworManager
-
 
 # Install AUR healper paru
 git clone https://aur.archlinux.org/paru.git
